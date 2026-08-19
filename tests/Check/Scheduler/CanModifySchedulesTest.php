@@ -17,9 +17,19 @@ class CanModifySchedulesTest extends TestCase
         /** @var (BranchType|null)[] $branchTypes */
         $branchTypes = [null, BranchType::DEFAULT, BranchType::DEV];
 
-        // standard projects - allowed for shore and admin roles for all branch types
+        // standard projects - allowed for none, share and admin roles for all branch types
         foreach ($branchTypes as $branchType) {
             $label = $branchType ? sprintf(' on %s branch', $branchType->value) : '';
+
+            yield 'regular token' . $label => [
+                'token' => new StorageApiToken(role: null),
+                'branchType' => $branchType,
+            ];
+
+            yield 'none role' . $label => [
+                'token' => new StorageApiToken(role: 'none'),
+                'branchType' => $branchType,
+            ];
 
             yield 'share role' . $label => [
                 'token' => new StorageApiToken(role: 'share'),
@@ -60,24 +70,24 @@ class CanModifySchedulesTest extends TestCase
         /** @var (BranchType|null)[] $branchTypes */
         $branchTypes = [null, BranchType::DEFAULT, BranchType::DEV];
 
-        $roles = [null, 'guest', 'readOnly', 'admin', 'share', 'developer', 'reviewer', 'productionManager'];
+        $roles = [null, 'none', 'guest', 'readOnly', 'admin', 'share', 'developer', 'reviewer', 'productionManager'];
 
         $errorPattern = 'Role "%s" is insufficient for this operation.';
 
         // standard projects
         foreach ($branchTypes as $branchType) {
             foreach ($roles as $role) {
-                if ($role === 'admin' || $role === 'share') {
+                if (in_array($role, [null, 'none', 'admin', 'share'], true)) {
                     continue;
                 }
 
-                $label = $role ?: 'regular token';
+                $label = $role;
                 $label .= $branchType ? sprintf(' on %s branch', $branchType->value) : '';
 
                 yield $label  => [
                     'token' => new StorageApiToken(role: $role),
                     'branchType' => $branchType,
-                    'errorMessage' => sprintf($errorPattern, $role?: 'none'),
+                    'errorMessage' => sprintf($errorPattern, $role),
                 ];
             }
         }

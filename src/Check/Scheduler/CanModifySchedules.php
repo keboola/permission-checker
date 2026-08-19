@@ -25,7 +25,7 @@ class CanModifySchedules implements PermissionCheckInterface
             $this->checkProtectedDefaultBranch($role);
         } else {
             $isAllowed = match ($role) {
-                Role::ADMIN, Role::SHARE => true,
+                Role::NONE, Role::ADMIN, Role::SHARE => true,
                 default => false,
             };
 
